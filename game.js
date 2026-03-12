@@ -1,108 +1,97 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const board = document.getElementById("board");
-    const guessInput = document.getElementById("guess-input");
-    const guessBtn = document.getElementById("guess-btn");
+  const board = document.getElementById("board");
+  const guessInput = document.getElementById("guess-input");
+  const guessBtn = document.getElementById("guess-btn");
+  const resultMenu = document.getElementById("resultMenu");
+  const resultText = document.getElementById("resultText");
+  const answerText = document.getElementById("answerText");
 
-    let answer;
-    let turns = 0;
-    const maxTurns = 6;
+  let answer;
+  let turns = 0;
+  const maxTurns = 6;
 
-    guessBtn.disabled = true;
+  // pick random answer
+  answer = window.characters[Math.floor(Math.random() * window.characters.length)];
+  console.log("Answer:", answer);
 
-    const gameList = window.list;
-    const gameMode = window.mode;
+  // enable button
+  guessBtn.disabled = false;
 
-    loadCharacters();
+  // click or enter
+  guessBtn.onclick = submitGuess;
+  guessInput.addEventListener("keydown", e => {
+    if (e.key === "Enter") submitGuess();
+  });
 
-    function loadCharacters() {
-        let script = document.createElement("script");
-        script.src = "./" + gameList;  // ensure correct path
-        script.onload = startGame;
-        document.body.appendChild(script);
+  function submitGuess() {
+    if (turns >= maxTurns) return;
+
+    const name = guessInput.value.trim().toUpperCase();
+    const guess = window.characters.find(c => c.name.toUpperCase() === name);
+
+    if (!guess) {
+      alert("Invalid character");
+      return;
     }
 
-    function startGame() {
-        if (gameMode === "random") {
-            answer = window.characters[Math.floor(Math.random() * window.characters.length)];
-        }
-        if (gameMode === "daily") {
-            let day = Math.floor(Date.now() / 86400000);
-            if (localStorage.getItem(gameList + "_daily") == day) {
-                alert("You already played today's daily.");
-                window.location = "index.html";
-                return;
-            }
-            answer = window.characters[day % window.characters.length];
-        }
-        console.log("Answer:", answer);
-        guessBtn.disabled = false;
+    turns++;
+    displayGuess(guess);
+
+    if (guess.name === answer.name) {
+      endGame(true);
+      return;
     }
 
-    guessBtn.onclick = submitGuess;
-    guessInput.addEventListener("keydown", e => {
-        if(e.key === "Enter") submitGuess();
-    });
+    if (turns >= maxTurns) endGame(false);
+    guessInput.value = "";
+  }
 
-    function submitGuess() {
-        if(turns >= maxTurns) return;
-        let name = guessInput.value.trim().toUpperCase();
-        let guess = window.characters.find(c => c.name.toUpperCase() === name);
-        if(!guess){ alert("Invalid character"); return; }
-        turns++;
-        displayGuess(guess);
-        if(guess.name === answer.name){ endGame(true); return; }
-        if(turns >= maxTurns){ endGame(false); }
-        guessInput.value = "";
-    }
+  function displayGuess(guess) {
+    const row = document.createElement("div");
+    row.className = "row";
 
-    function displayGuess(guess){
-        let row = document.createElement("div");
-        row.className = "row";
-        Object.keys(guess).forEach(key => {
-            if(key === "name") row.appendChild(makeCell(guess.name, guess.name===answer.name));
-            else if(key === "lightner" || key === "species") row.appendChild(makeCell(guess[key], guess[key]===answer[key]));
-            else if(key === "chapter" || key === "place") row.appendChild(compareNumber(key, guess[key]));
-            else if(key === "role") row.appendChild(compareRole(guess.role));
-            else if(key === "gender") row.appendChild(makeCell(guess.gender, guess.gender===answer.gender));
-            else if(key === "undertale" || key === "deltarune") row.appendChild(makeCell(guess[key] ? "Yes" : "No", guess[key]===answer[key]));
-        });
-        board.appendChild(row);
-    }
+    row.appendChild(makeCell(guess.name, guess.name === answer.name));
+    row.appendChild(makeCell(guess.lightner, guess.lightner === answer.lightner));
+    row.appendChild(compareNumber("chapter", guess.chapter));
+    row.appendChild(compareRole(guess.role));
+    row.appendChild(makeCell(guess.gender, guess.gender === answer.gender));
+    row.appendChild(makeCell(guess.undertale ? "Yes" : "No", guess.undertale === answer.undertale));
 
-    function compareNumber(key, value){
-        let text = key==="chapter"?"Chapter "+value:"Place "+value;
-        if(value===answer[key]) return makeCell(text,true);
-        if(value<answer[key]) return makeCell(text+" ↑","close");
-        return makeCell(text+" ↓","close");
-    }
+    board.appendChild(row);
+  }
 
-    function compareRole(roles){
-        let correct = roles.length===answer.role.length && roles.every(r=>answer.role.includes(r));
-        if(correct) return makeCell(roles.join(","), true);
-        let partial = roles.some(r=>answer.role.includes(r));
-        if(partial) return makeCell(roles.join(","), "close");
-        return makeCell(roles.join(","), false);
-    }
+  function compareNumber(key, value) {
+    const text = key === "chapter" ? "Chapter " + value : "Place " + value;
+    if (value === answer[key]) return makeCell(text, true);
+    if (value < answer[key]) return makeCell(text + " ↑", "close");
+    return makeCell(text + " ↓", "close");
+  }
 
-    function makeCell(text, state){
-        let cell = document.createElement("div");
-        cell.className="cell";
-        cell.innerText = text;
-        if(state===true) cell.classList.add("correct");
-        if(state==="close") cell.classList.add("close");
-        if(state===false) cell.classList.add("wrong");
-        return cell;
-    }
+  function compareRole(roles) {
+    const correct = roles.length === answer.role.length && roles.every(r => answer.role.includes(r));
+    if (correct) return makeCell(roles.join(","), true);
+    const partial = roles.some(r => answer.role.includes(r));
+    if (partial) return makeCell(roles.join(","), "close");
+    return makeCell(roles.join(","), false);
+  }
 
-    function endGame(win){
-        document.getElementById("resultText").innerText = win?"You Win!":"You Lost!";
-        document.getElementById("answerText").innerText = "Answer: "+answer.name;
-        if(gameMode==="daily"){
-            let day=Math.floor(Date.now()/86400000);
-            localStorage.setItem(gameList+"_daily", day);
-        }
-        document.getElementById("resultMenu").style.display="block";
-    }
+  function makeCell(text, state) {
+    const cell = document.createElement("div");
+    cell.className = "cell";
+    cell.innerText = text;
+    if (state === true) cell.classList.add("correct");
+    if (state === "close") cell.classList.add("close");
+    if (state === false) cell.classList.add("wrong");
+    return cell;
+  }
 
-    window.playAgain = ()=>{ window.location.href = window.location.href; }
+  function endGame(win) {
+    resultText.innerText = win ? "You Win!" : "You Lost!";
+    answerText.innerText = "Answer: " + answer.name;
+    resultMenu.style.display = "block";
+  }
+
+  window.playAgain = () => {
+    window.location.reload();
+  };
 });
