@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Deltarune All Random</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>Deltarune All Random</h1>
+
+<input id="guess-input" placeholder="Character name">
+<button id="guess-btn">Guess</button>
+
+<div class="header-row">
+<div>Name</div>
+<div>Light/Dark</div>
+<div>Chapter</div>
+<div>Role</div>
+<div>Gender</div>
+<div>In Undertale</div>
+</div>
+
+<div id="board"></div>
+
+<div id="resultMenu">
+<h2 id="resultText"></h2>
+<p id="answerText"></p>
+<button onclick="playAgain()">Another Random</button>
+<a href="index.html"><button>Main Menu</button></a>
+</div>
+
+<script>
+const list="dr_all_characters.js";
+const mode="random";
+</script>
+<script src="game.js"></script>
+
+</body>
+</html>
