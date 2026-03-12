@@ -53,9 +53,9 @@ button:hover { background-color:#555; }
     word-wrap:break-word;
 }
 
-.correct { background-color:#00cc66; color:black; }
-.close { background-color:#e6b800; color:black; }
-.wrong { background-color:#444; }
+.correct { background-color:#00cc66; color:black; }   /* green */
+.close { background-color:#e6b800; color:black; }     /* yellow */
+.wrong { background-color:#444; }                     /* gray/red */
 
 #resultMenu {
     position:fixed;
