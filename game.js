@@ -1,7 +1,3 @@
-let answer;
-let turns = 0;
-const maxTurns = 6;
-
 document.addEventListener("DOMContentLoaded", () => {
     const board = document.getElementById("board");
     const guessInput = document.getElementById("guess-input");
@@ -11,7 +7,6 @@ document.addEventListener("DOMContentLoaded", () => {
     let turns = 0;
     const maxTurns = 6;
 
-    // Disable button until characters load
     guessBtn.disabled = true;
 
     const gameList = window.list;
@@ -21,14 +16,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function loadCharacters() {
         let script = document.createElement("script");
-        script.src = gameList;
+        script.src = "./" + gameList;  // ensure correct path
         script.onload = startGame;
         document.body.appendChild(script);
     }
 
     function startGame() {
         if (gameMode === "random") {
-            answer = characters[Math.floor(Math.random() * characters.length)];
+            answer = window.characters[Math.floor(Math.random() * window.characters.length)];
         }
         if (gameMode === "daily") {
             let day = Math.floor(Date.now() / 86400000);
@@ -37,105 +32,77 @@ document.addEventListener("DOMContentLoaded", () => {
                 window.location = "index.html";
                 return;
             }
-            answer = characters[day % characters.length];
+            answer = window.characters[day % window.characters.length];
         }
-
         console.log("Answer:", answer);
         guessBtn.disabled = false;
     }
 
     guessBtn.onclick = submitGuess;
-
-    // Allow Enter key to submit
-    guessInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") submitGuess();
+    guessInput.addEventListener("keydown", e => {
+        if(e.key === "Enter") submitGuess();
     });
 
     function submitGuess() {
-        if (turns >= maxTurns) return;
-
+        if(turns >= maxTurns) return;
         let name = guessInput.value.trim().toUpperCase();
-        let guess = characters.find(c => c.name.toUpperCase() === name);
-
-        if (!guess) {
-            alert("Invalid character");
-            return;
-        }
-
+        let guess = window.characters.find(c => c.name.toUpperCase() === name);
+        if(!guess){ alert("Invalid character"); return; }
         turns++;
         displayGuess(guess);
-
-        if (guess.name === answer.name) {
-            endGame(true);
-            return;
-        }
-
-        if (turns >= maxTurns) {
-            endGame(false);
-        }
-
+        if(guess.name === answer.name){ endGame(true); return; }
+        if(turns >= maxTurns){ endGame(false); }
         guessInput.value = "";
     }
 
-    function displayGuess(guess) {
+    function displayGuess(guess){
         let row = document.createElement("div");
         row.className = "row";
-
-        const keys = Object.keys(guess);
-
-        keys.forEach(key => {
-            if (key === "name") row.appendChild(makeCell(guess.name, guess.name === answer.name));
-            else if (key === "lightner" || key === "species") row.appendChild(makeCell(guess[key], guess[key] === answer[key]));
-            else if (key === "chapter" || key === "place") row.appendChild(compareNumber(key, guess[key]));
-            else if (key === "role") row.appendChild(compareRole(guess.role));
-            else if (key === "gender") row.appendChild(makeCell(guess.gender, guess.gender === answer.gender));
-            else if (key === "undertale" || key === "deltarune") row.appendChild(makeCell(guess[key] ? "Yes" : "No", guess[key] === answer[key]));
+        Object.keys(guess).forEach(key => {
+            if(key === "name") row.appendChild(makeCell(guess.name, guess.name===answer.name));
+            else if(key === "lightner" || key === "species") row.appendChild(makeCell(guess[key], guess[key]===answer[key]));
+            else if(key === "chapter" || key === "place") row.appendChild(compareNumber(key, guess[key]));
+            else if(key === "role") row.appendChild(compareRole(guess.role));
+            else if(key === "gender") row.appendChild(makeCell(guess.gender, guess.gender===answer.gender));
+            else if(key === "undertale" || key === "deltarune") row.appendChild(makeCell(guess[key] ? "Yes" : "No", guess[key]===answer[key]));
         });
-
         board.appendChild(row);
     }
 
-    function compareNumber(key, value) {
-        let correctText = key === "chapter" ? "Chapter " + value : "Place " + value;
-        if (value === answer[key]) return makeCell(correctText, true);
-        if (value < answer[key]) return makeCell(correctText + " ↑", "close");
-        return makeCell(correctText + " ↓", "close");
+    function compareNumber(key, value){
+        let text = key==="chapter"?"Chapter "+value:"Place "+value;
+        if(value===answer[key]) return makeCell(text,true);
+        if(value<answer[key]) return makeCell(text+" ↑","close");
+        return makeCell(text+" ↓","close");
     }
 
-    function compareRole(roles) {
-        let correct = roles.length === answer.role.length && roles.every(r => answer.role.includes(r));
-        if (correct) return makeCell(roles.join(","), true);
-        let partial = roles.some(r => answer.role.includes(r));
-        if (partial) return makeCell(roles.join(","), "close");
+    function compareRole(roles){
+        let correct = roles.length===answer.role.length && roles.every(r=>answer.role.includes(r));
+        if(correct) return makeCell(roles.join(","), true);
+        let partial = roles.some(r=>answer.role.includes(r));
+        if(partial) return makeCell(roles.join(","), "close");
         return makeCell(roles.join(","), false);
     }
 
-    function makeCell(text, state) {
+    function makeCell(text, state){
         let cell = document.createElement("div");
-        cell.className = "cell";
+        cell.className="cell";
         cell.innerText = text;
-        if (state === true) cell.classList.add("correct");
-        if (state === "close") cell.classList.add("close");
-        if (state === false) cell.classList.add("wrong");
+        if(state===true) cell.classList.add("correct");
+        if(state==="close") cell.classList.add("close");
+        if(state===false) cell.classList.add("wrong");
         return cell;
     }
 
-    function endGame(win) {
-        document.getElementById("resultText").innerText = win ? "You Win!" : "You Lost!";
-        document.getElementById("answerText").innerText = "Answer: " + answer.name;
-
-        if (gameMode === "daily") {
-            let day = Math.floor(Date.now() / 86400000);
-            localStorage.setItem(gameList + "_daily", day);
+    function endGame(win){
+        document.getElementById("resultText").innerText = win?"You Win!":"You Lost!";
+        document.getElementById("answerText").innerText = "Answer: "+answer.name;
+        if(gameMode==="daily"){
+            let day=Math.floor(Date.now()/86400000);
+            localStorage.setItem(gameList+"_daily", day);
         }
-
-        document.getElementById("resultMenu").style.display = "block";
+        document.getElementById("resultMenu").style.display="block";
     }
 
-    function playAgain() {
-        window.location.href = window.location.href;
-    }
-
-    // Expose playAgain to global so HTML button can call it
-    window.playAgain = playAgain;
+    window.playAgain = ()=>{ window.location.href = window.location.href; }
 });
