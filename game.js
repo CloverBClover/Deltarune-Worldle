@@ -6,7 +6,8 @@ const board = document.getElementById("board");
 const guessInput = document.getElementById("guess-input");
 const guessBtn = document.getElementById("guess-btn");
 
-guessBtn.onclick = submitGuess;
+// Disable button until characters load
+guessBtn.disabled = true;
 
 // Get list and mode from HTML
 const gameList = window.list;
@@ -37,13 +38,18 @@ function startGame() {
     }
 
     console.log("Answer:", answer);
+
+    // Enable button after everything is ready
+    guessBtn.disabled = false;
 }
+
+guessBtn.onclick = submitGuess;
 
 function submitGuess() {
     if (turns >= maxTurns) return;
 
     let name = guessInput.value.trim().toUpperCase();
-    let guess = characters.find(c => c.name === name);
+    let guess = characters.find(c => c.name.toUpperCase() === name);
 
     if (!guess) {
         alert("Invalid character");
